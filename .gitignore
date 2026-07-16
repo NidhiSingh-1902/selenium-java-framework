@@ -1,0 +1,21 @@
+# Maven build output
+target/
+
+# Test output and reports
+test-output/
+
+# Screenshots taken on failure
+screenshots/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.class
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log

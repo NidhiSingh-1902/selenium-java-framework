@@ -13,6 +13,12 @@ screenshots/
 .vscode/
 *.class
 
+# Eclipse IDE files (machine-specific, auto-generated from pom.xml)
+.classpath
+.project
+.settings/
+bin/
+
 # OS files
 .DS_Store
 Thumbs.db

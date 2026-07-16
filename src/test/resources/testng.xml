@@ -13,4 +13,11 @@
         </classes>
     </test>
 
+    <!-- Products / Inventory Tests -->
+    <test name="Products Tests">
+        <classes>
+            <class name="com.tests.ProductsTest"/>
+        </classes>
+    </test>
+
 </suite>

@@ -1,0 +1,632 @@
+<title>Framework Flow & Architecture</title>
+<meta name="description" content="Visual walkthrough of how the Selenium Java TestNG framework is structured and how a test executes end to end.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f4f5fb;
+    --surface: #ffffff;
+    --border: #dde0f0;
+    --accent: #2563d4;
+    --accent-soft: #e8eeff;
+    --accent-dim: #b8d0ff;
+    --text: #1c1f2e;
+    --muted: #5e6380;
+    --code-bg: #1c2033;
+    --code-text: #cdd3f0;
+    --kw: #79b8ff;
+    --an: #f69d50;
+    --ty: #7ec8a4;
+    --str: #9ecbff;
+    --cm: #6b7394;
+    --pass: #15803d;
+    --pass-bg: #dcfce7;
+    --warn: #92400e;
+    --warn-bg: #fef3c7;
+    --font-mono: 'Courier New', Courier, monospace;
+    --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --r: 8px;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.7;
+    padding: 2rem 1.5rem 5rem;
+  }
+  .page { max-width: 860px; margin: 0 auto; }
+
+  /* ── Header ── */
+  .page-header { margin-bottom: 2.5rem; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 0.5rem;
+  }
+  .page-header h1 {
+    font-family: var(--font-mono); font-size: 1.75rem; font-weight: 700;
+    color: var(--text); margin-bottom: 0.5rem; text-wrap: balance;
+  }
+  .page-header p { color: var(--muted); font-size: 1rem; max-width: 60ch; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 2.5rem; overflow-x: auto; }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;
+    color: var(--muted); padding: 0.65rem 1.2rem;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    white-space: nowrap; transition: color 0.15s, border-color 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .tab-btn:hover { color: var(--accent); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Section headings ── */
+  h2 {
+    font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700;
+    color: var(--text); margin-bottom: 0.9rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  h2::before {
+    content: ''; display: block; width: 3px; height: 1em;
+    background: var(--accent); border-radius: 2px; flex-shrink: 0;
+  }
+  h3 { font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700; color: var(--text); margin: 1.6rem 0 0.6rem; }
+  p { color: var(--text); margin-bottom: 0.85rem; max-width: 68ch; }
+
+  /* ── Architecture diagram ── */
+  .arch { display: flex; flex-direction: column; gap: 0; margin-bottom: 2rem; }
+  .arch-layer {
+    border: 2px solid var(--border); border-radius: var(--r);
+    overflow: hidden; cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .arch-layer:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .arch-layer.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .arch-connector {
+    display: flex; justify-content: center; align-items: center;
+    height: 2.5rem; color: var(--muted); font-family: var(--font-mono);
+    font-size: 0.78rem; gap: 0.4rem;
+  }
+  .arch-connector svg { flex-shrink: 0; }
+  .layer-header {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 1.4rem; background: var(--surface);
+  }
+  .layer-icon {
+    width: 2.5rem; height: 2.5rem; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 1rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .layer-icon.blue { background: var(--accent-soft); color: var(--accent); }
+  .layer-icon.green { background: var(--pass-bg); color: var(--pass); }
+  .layer-icon.amber { background: var(--warn-bg); color: var(--warn); }
+  .layer-title { font-family: var(--font-mono); font-size: 0.92rem; font-weight: 700; color: var(--text); }
+  .layer-subtitle { font-size: 0.8rem; color: var(--muted); margin-top: 0.1rem; }
+  .layer-detail {
+    display: none; padding: 1.2rem 1.4rem; border-top: 1px solid var(--border);
+    background: #fafbff;
+  }
+  .layer-detail.open { display: block; }
+  .file-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.8rem; }
+  .chip {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    background: var(--accent-soft); color: var(--accent);
+    padding: 0.2em 0.6em; border-radius: 4px;
+    border: 1px solid var(--accent-dim);
+  }
+  .chip.green { background: var(--pass-bg); color: var(--pass); border-color: #a7f3d0; }
+  .chip.amber { background: var(--warn-bg); color: var(--warn); border-color: #fcd34d; }
+  .detail-text { font-size: 0.875rem; color: var(--muted); max-width: 62ch; }
+
+  /* ── Flow steps ── */
+  .flow { display: flex; flex-direction: column; gap: 0; }
+  .flow-step {
+    display: grid; grid-template-columns: 3.5rem 1fr;
+    gap: 0; position: relative;
+  }
+  .flow-step::before {
+    content: ''; position: absolute;
+    left: 1.75rem; top: 3.5rem; bottom: 0;
+    width: 2px; background: var(--border);
+    transform: translateX(-50%);
+  }
+  .flow-step:last-child::before { display: none; }
+  .step-left { display: flex; flex-direction: column; align-items: center; padding-top: 0.9rem; }
+  .step-circle {
+    width: 2rem; height: 2rem; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative; z-index: 1;
+  }
+  .step-circle.green { background: var(--pass); }
+  .step-circle.amber { background: #d97706; }
+  .step-body {
+    padding: 0.75rem 0 1.75rem 1.2rem;
+    border-left: none;
+  }
+  .step-tag {
+    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 0.25rem;
+  }
+  .step-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.3rem; color: var(--text); }
+  .step-desc { font-size: 0.855rem; color: var(--muted); max-width: 58ch; margin-bottom: 0.5rem; }
+
+  /* ── Code ── */
+  .code-wrap { overflow-x: auto; margin-top: 0.5rem; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.65;
+    padding: 1rem 1.25rem; border-radius: var(--r); overflow-x: auto;
+  }
+  pre .kw  { color: var(--kw); }
+  pre .an  { color: var(--an); }
+  pre .ty  { color: var(--ty); }
+  pre .str { color: var(--str); }
+  pre .cm  { color: var(--cm); font-style: italic; }
+  code {
+    font-family: var(--font-mono); font-size: 0.83em;
+    background: var(--accent-soft); color: var(--accent);
+    padding: 0.15em 0.4em; border-radius: 3px;
+  }
+
+  /* ── Callout ── */
+  .callout {
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    border-radius: 0 var(--r) var(--r) 0;
+    padding: 0.85rem 1.1rem; font-size: 0.875rem;
+    color: var(--text); margin-bottom: 1.1rem;
+  }
+  .callout strong { color: var(--accent); }
+  .callout.green { background: var(--pass-bg); border-color: var(--pass); }
+  .callout.green strong { color: var(--pass); }
+
+  /* ── Two column ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.1rem 1.3rem; }
+  .card-label { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .card p { font-size: 0.855rem; color: var(--muted); margin: 0; max-width: none; }
+
+  /* ── Comparison table ── */
+  .compare { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .compare thead th { background: var(--accent-soft); color: var(--accent); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.6rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .compare tbody tr { border-bottom: 1px solid var(--border); }
+  .compare tbody tr:last-child { border-bottom: none; }
+  .compare tbody tr:hover { background: #f8f9fd; }
+  .compare td { padding: 0.65rem 1rem; vertical-align: top; }
+  .compare td.mono { font-family: var(--font-mono); font-size: 0.78rem; }
+  .badge-pass { display: inline-block; background: var(--pass-bg); color: var(--pass); font-size: 0.7rem; font-weight: 700; font-family: var(--font-mono); padding: 0.1em 0.5em; border-radius: 8px; }
+  .badge-fail { display: inline-block; background: #fee2e2; color: #b91c1c; font-size: 0.7rem; font-weight: 700; font-family: var(--font-mono); padding: 0.1em 0.5em; border-radius: 8px; }
+
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+    .tabs { gap: 0; }
+    .tab-btn { padding: 0.55rem 0.75rem; font-size: 0.72rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<div class="page">
+  <header class="page-header">
+    <div class="eyebrow">How it works</div>
+    <h1>Framework Flow &amp; Architecture</h1>
+    <p>A complete walkthrough of how the three layers connect, what happens when a test runs, and why the React-specific patterns exist.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" onclick="showTab('arch')" role="tab">Architecture</button>
+    <button class="tab-btn" onclick="showTab('flow')" role="tab">Execution Flow</button>
+    <button class="tab-btn" onclick="showTab('pom')" role="tab">Page Object Pattern</button>
+    <button class="tab-btn" onclick="showTab('react')" role="tab">React Fixes</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       TAB 1 — Architecture
+  ════════════════════════════════════════════════════ -->
+  <div id="tab-arch" class="tab-panel active">
+    <h2>Three-Layer Architecture</h2>
+    <p>The framework is split into three layers. Each layer has exactly one job. Click any layer to see its files and responsibility.</p>
+
+    <div class="arch">
+
+      <!-- Layer 1: Tests -->
+      <div class="arch-layer" id="lyr-tests" onclick="toggleLayer('tests')">
+        <div class="layer-header">
+          <div class="layer-icon green">T</div>
+          <div>
+            <div class="layer-title">Layer 1 — Tests</div>
+            <div class="layer-subtitle">src/test/java/com/tests/ &nbsp;·&nbsp; 8 classes, 54 test methods</div>
+          </div>
+        </div>
+        <div class="layer-detail" id="detail-tests">
+          <div class="file-chips">
+            <span class="chip green">LoginTest.java</span>
+            <span class="chip green">ProductsTest.java</span>
+            <span class="chip green">CartTest.java</span>
+            <span class="chip green">CheckoutStep1Test.java</span>
+            <span class="chip green">CheckoutStep2Test.java</span>
+            <span class="chip green">OrderCompleteTest.java</span>
+            <span class="chip green">MenuTest.java</span>
+          </div>
+          <p class="detail-text"><strong>Job:</strong> Define WHAT to verify. Each test method sets up a scenario (Arrange), performs an action (Act), and checks the outcome (Assert). Test classes know nothing about Selenium — they only talk to Page Objects.</p>
+          <p class="detail-text" style="margin-top:0.5rem;"><strong>Extends:</strong> <code>BaseTest</code> — inherits <code>getDriver()</code>, automatic browser open/close, and test logging.</p>
+        </div>
+      </div>
+
+      <div class="arch-connector">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 10l4 4 4-4" stroke="#5e6380" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        calls methods on
+      </div>
+
+      <!-- Layer 2: Pages -->
+      <div class="arch-layer" id="lyr-pages" onclick="toggleLayer('pages')">
+        <div class="layer-header">
+          <div class="layer-icon blue">P</div>
+          <div>
+            <div class="layer-title">Layer 2 — Page Objects</div>
+            <div class="layer-subtitle">src/main/java/com/pages/ &nbsp;·&nbsp; 8 page classes + 1 component (BurgerMenu)</div>
+          </div>
+        </div>
+        <div class="layer-detail" id="detail-pages">
+          <div class="file-chips">
+            <span class="chip">LoginPage.java</span>
+            <span class="chip">ProductsPage.java</span>
+            <span class="chip">CartPage.java</span>
+            <span class="chip">CheckoutStep1Page.java</span>
+            <span class="chip">CheckoutStep2Page.java</span>
+            <span class="chip">OrderCompletePage.java</span>
+            <span class="chip">BurgerMenuPage.java</span>
+          </div>
+          <p class="detail-text"><strong>Job:</strong> Define HOW to interact with one page. Each class holds the locators (<code>@FindBy</code>) and action methods (<code>clickCheckout()</code>, <code>fillFormAndContinue()</code>). No Assert statements here.</p>
+          <p class="detail-text" style="margin-top:0.5rem;"><strong>Extends:</strong> <code>BasePage</code> — inherits <code>jsClick()</code>, <code>typeReact()</code>, <code>getText()</code>, <code>waitForVisible()</code> and all other browser interaction helpers.</p>
+        </div>
+      </div>
+
+      <div class="arch-connector">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 10l4 4 4-4" stroke="#5e6380" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        uses helpers from
+      </div>
+
+      <!-- Layer 3: Framework core -->
+      <div class="arch-layer" id="lyr-fw" onclick="toggleLayer('fw')">
+        <div class="layer-header">
+          <div class="layer-icon amber">F</div>
+          <div>
+            <div class="layer-title">Layer 3 — Framework Core</div>
+            <div class="layer-subtitle">src/main/java/com/framework/ &nbsp;·&nbsp; BaseTest, BasePage, WaitUtils</div>
+          </div>
+        </div>
+        <div class="layer-detail" id="detail-fw">
+          <div class="file-chips">
+            <span class="chip amber">BaseTest.java</span>
+            <span class="chip amber">BasePage.java</span>
+            <span class="chip amber">WaitUtils.java</span>
+            <span class="chip amber">TestListener.java</span>
+          </div>
+          <p class="detail-text"><strong>Job:</strong> Manage the browser and provide stable, reusable building blocks. <code>BaseTest</code> opens Chrome before each test and closes it after. <code>BasePage</code> wraps every Selenium call with proper waits. <code>WaitUtils</code> centralises all WebDriverWait logic.</p>
+          <p class="detail-text" style="margin-top:0.5rem;"><strong>You never touch this layer</strong> unless you need a new shared capability (like a new <code>typeReact()</code> variant). It changes rarely.</p>
+        </div>
+      </div>
+
+      <div class="arch-connector">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 10l4 4 4-4" stroke="#5e6380" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        sends commands to
+      </div>
+
+      <!-- Browser -->
+      <div class="arch-layer" id="lyr-browser" onclick="toggleLayer('browser')">
+        <div class="layer-header">
+          <div class="layer-icon" style="background:#f0f0f0;color:#444;">C</div>
+          <div>
+            <div class="layer-title">Chrome Browser + SauceDemo</div>
+            <div class="layer-subtitle">ChromeDriver 150 &nbsp;·&nbsp; https://www.saucedemo.com</div>
+          </div>
+        </div>
+        <div class="layer-detail" id="detail-browser">
+          <p class="detail-text"><strong>ChromeDriver</strong> translates WebDriver JSON commands into native Chrome DevTools Protocol (CDP) calls. The browser opens, navigates pages, fills forms, clicks buttons, and returns results — all controlled by the framework layers above.</p>
+          <p class="detail-text" style="margin-top:0.5rem;"><strong>WebDriverManager</strong> (a Maven dependency) automatically downloads the correct ChromeDriver version that matches your installed Chrome — no manual driver setup needed.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout green">
+      <strong>The rule that keeps it clean:</strong> Tests only talk to Page Objects. Page Objects only talk to BasePage. Nothing skips a layer. This means when a locator changes on a page, you fix it in one place — the Page Object — and all tests that use it automatically get the fix.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       TAB 2 — Execution Flow
+  ════════════════════════════════════════════════════ -->
+  <div id="tab-flow" class="tab-panel">
+    <h2>What happens when you run <code>mvn test</code></h2>
+    <p>From the moment you hit Enter to the moment the result prints — every step the framework takes.</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-left"><div class="step-circle">1</div></div>
+        <div class="step-body">
+          <div class="step-tag">Maven</div>
+          <div class="step-title">Maven reads pom.xml and compiles</div>
+          <div class="step-desc">Maven downloads dependencies (Selenium, TestNG, Log4j) from Maven Central if not already cached, then compiles all <code>.java</code> files in <code>src/main</code> and <code>src/test</code>.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-left"><div class="step-circle">2</div></div>
+        <div class="step-body">
+          <div class="step-tag">Maven Surefire + TestNG</div>
+          <div class="step-title">Surefire plugin hands control to TestNG</div>
+          <div class="step-desc">Maven Surefire finds <code>testng.xml</code> (configured in pom.xml) and passes it to the TestNG engine. TestNG reads all 8 <code>&lt;test&gt;</code> blocks and builds a list of every test method to run.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-left"><div class="step-circle amber">3</div></div>
+        <div class="step-body">
+          <div class="step-tag">TestNG + BaseTest</div>
+          <div class="step-title">@BeforeMethod — Chrome opens</div>
+          <div class="step-desc">Before every individual test method, TestNG calls <code>@BeforeMethod</code> in <code>BaseTest</code>. This creates a fresh <code>ChromeDriver</code> instance, maximises the window, and navigates to the SauceDemo login page.</div>
+          <div class="code-wrap"><pre><span class="an">@BeforeMethod</span>
+<span class="kw">public void</span> setUp() {
+    driver = <span class="kw">new</span> <span class="ty">ChromeDriver</span>();         <span class="cm">// fresh browser per test</span>
+    driver.manage().window().maximize();
+    driver.get(<span class="str">"https://www.saucedemo.com"</span>);
+}</pre></div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-left"><div class="step-circle">4</div></div>
+        <div class="step-body">
+          <div class="step-tag">Test class</div>
+          <div class="step-title">The test method runs — Arrange</div>
+          <div class="step-desc">The test calls its helper (e.g. <code>loginAndOpenCart()</code>). This creates Page Object instances and calls their methods to reach the right starting state.</div>
+          <div class="code-wrap"><pre><span class="cm">// Inside CartTest.cartPageLoadsTest()</span>
+<span class="ty">CartPage</span> cart = loginAndOpenCart();
+<span class="cm">// helper does: login → addToCart(0) → goToCart()</span></pre></div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-left"><div class="step-circle">5</div></div>
+        <div class="step-body">
+          <div class="step-tag">Page Object → BasePage → Selenium</div>
+          <div class="step-title">Page Object translates actions into Selenium calls</div>
+          <div class="step-desc">Each page method uses inherited helpers from <code>BasePage</code>. For example, <code>goToCart()</code> calls <code>jsClick(cartIcon)</code> then <code>wait.waitForUrlContains("cart.html")</code>. BasePage sends the actual WebDriver commands to Chrome.</div>
+          <div class="code-wrap"><pre><span class="cm">// ProductsPage.goToCart()</span>
+<span class="kw">public void</span> goToCart() {
+    wait.waitForVisible(cartIcon);
+    jsClick(cartIcon);                        <span class="cm">// → ChromeDriver click</span>
+    wait.waitForUrlContains(<span class="str">"cart.html"</span>);    <span class="cm">// → polls until URL changes</span>
+}</pre></div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-left"><div class="step-circle">6</div></div>
+        <div class="step-body">
+          <div class="step-tag">Test class</div>
+          <div class="step-title">Assert — verify the outcome</div>
+          <div class="step-desc">Back in the test method, <code>Assert</code> statements check that the outcome matches expectations. A passing assertion does nothing. A failing assertion throws <code>AssertionError</code>, which TestNG records as FAIL.</div>
+          <div class="code-wrap"><pre>Assert.assertTrue(cart.isPageLoaded(),
+    <span class="str">"Cart page should load"</span>);
+Assert.assertEquals(cart.getPageHeading(), <span class="str">"Your Cart"</span>,
+    <span class="str">"Heading should say Your Cart"</span>);</pre></div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-left"><div class="step-circle amber">7</div></div>
+        <div class="step-body">
+          <div class="step-tag">TestNG + BaseTest</div>
+          <div class="step-title">@AfterMethod — Chrome closes</div>
+          <div class="step-desc">Whether the test passed or failed, <code>@AfterMethod</code> in <code>BaseTest</code> always runs and calls <code>driver.quit()</code> — closes the browser and frees the ChromeDriver process. Every test gets a clean slate.</div>
+          <div class="code-wrap"><pre><span class="an">@AfterMethod</span>
+<span class="kw">public void</span> tearDown() {
+    <span class="kw">if</span> (driver != <span class="kw">null</span>) driver.quit();  <span class="cm">// always runs, even on test failure</span>
+}</pre></div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-left"><div class="step-circle green">8</div></div>
+        <div class="step-body">
+          <div class="step-tag">Surefire</div>
+          <div class="step-title">Report written to target/surefire-reports/</div>
+          <div class="step-desc">TestNG emits results to Surefire. A <code>.txt</code> summary and <code>.xml</code> file are written for each test class. Maven prints the final summary: <strong>BUILD SUCCESS</strong> (0 failures) or <strong>BUILD FAILURE</strong> (with failure count).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>parallel="methods" thread-count="2"</strong> in testng.xml means TestNG runs 2 test methods at the same time within each suite. Each gets its own browser instance from <code>@BeforeMethod</code>. The <code>driver</code> field in BaseTest is a <code>ThreadLocal</code> so the two threads never share the same browser.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       TAB 3 — Page Object Pattern
+  ════════════════════════════════════════════════════ -->
+  <div id="tab-pom" class="tab-panel">
+    <h2>Page Object Model — How It Works</h2>
+    <p>Page Object Model (POM) is the core design pattern. It separates WHERE elements are (the page class) from WHAT to verify (the test class).</p>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-label">Without POM</div>
+        <p>Locators and Selenium calls are scattered across test files. When a button ID changes, you search through every test to find all 12 places that reference it.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">With POM</div>
+        <p>Each page's locators live in one class. When a button ID changes, you fix it in one place — the Page Object — and all tests that use it are automatically fixed.</p>
+      </div>
+    </div>
+
+    <h3>How @FindBy and PageFactory work</h3>
+    <p>When a Page Object is created with <code>new CartPage(driver)</code>, the constructor calls <code>super(driver)</code> which calls <code>PageFactory.initElements(driver, this)</code>. This scans every field annotated with <code>@FindBy</code> and wraps it in a <strong>lazy proxy</strong>.</p>
+    <div class="code-wrap"><pre><span class="cm">// @FindBy just declares the locator — the element is NOT found yet</span>
+<span class="an">@FindBy</span>(id = <span class="str">"checkout"</span>)
+<span class="kw">private</span> <span class="ty">WebElement</span> checkoutButton;
+
+<span class="cm">// The element is only searched in the DOM when you USE it</span>
+<span class="kw">public void</span> clickCheckout() {
+    jsClick(checkoutButton);   <span class="cm">// ← driver.findElement(By.id("checkout")) happens HERE</span>
+}</pre></div>
+    <div class="callout"><strong>Why lazy?</strong> If Selenium found all elements at construction time, any element not yet on the page would immediately throw <code>NoSuchElementException</code>. The lazy proxy re-finds the element each time it is accessed, so it always gets the current DOM node.</div>
+
+    <h3>How BasePage provides shared behaviour</h3>
+    <p>All 8 page classes extend <code>BasePage</code>. This gives every page access to the same helpers without copying code. When <code>type()</code> or <code>jsClick()</code> needs an improvement, you fix it once in <code>BasePage</code> and every page gets it.</p>
+    <div class="code-wrap"><pre><span class="cm">// BasePage.java (simplified)</span>
+<span class="kw">public class</span> <span class="ty">BasePage</span> {
+    <span class="kw">protected final</span> <span class="ty">WebDriver</span>  driver;
+    <span class="kw">protected final</span> <span class="ty">WaitUtils</span>  wait;
+    <span class="kw">protected final</span> <span class="ty">Logger</span>     log;
+
+    <span class="kw">public</span> <span class="ty">BasePage</span>(<span class="ty">WebDriver</span> driver) {
+        <span class="kw">this</span>.driver = driver;
+        <span class="kw">this</span>.wait   = <span class="kw">new</span> <span class="ty">WaitUtils</span>(driver);
+        <span class="ty">PageFactory</span>.initElements(driver, <span class="kw">this</span>); <span class="cm">// ← wires @FindBy fields</span>
+    }
+}
+
+<span class="cm">// CartPage.java — inherits everything above automatically</span>
+<span class="kw">public class</span> <span class="ty">CartPage</span> <span class="kw">extends</span> <span class="ty">BasePage</span> {
+    <span class="an">@FindBy</span>(id = <span class="str">"checkout"</span>) <span class="kw">private</span> <span class="ty">WebElement</span> checkoutButton;
+
+    <span class="kw">public</span> <span class="ty">CartPage</span>(<span class="ty">WebDriver</span> driver) { <span class="kw">super</span>(driver); }
+
+    <span class="kw">public void</span> clickCheckout() {
+        jsClick(checkoutButton);                      <span class="cm">// inherited</span>
+        wait.waitForUrlContains(<span class="str">"checkout-step-one"</span>); <span class="cm">// inherited</span>
+    }
+}</pre></div>
+
+    <h3>How BaseTest manages the browser</h3>
+    <div class="code-wrap"><pre><span class="cm">// BaseTest.java (simplified) — every test class extends this</span>
+<span class="kw">public class</span> <span class="ty">BaseTest</span> {
+    <span class="kw">private</span> <span class="ty">ThreadLocal</span>&lt;<span class="ty">WebDriver</span>&gt; driverPool = <span class="kw">new</span> <span class="ty">ThreadLocal</span>&lt;&gt;();
+
+    <span class="an">@BeforeMethod</span>
+    <span class="kw">public void</span> setUp() {
+        <span class="ty">WebDriver</span> driver = <span class="kw">new</span> <span class="ty">ChromeDriver</span>();  <span class="cm">// new browser per test</span>
+        driver.manage().window().maximize();
+        driver.get(<span class="str">"https://www.saucedemo.com"</span>);
+        driverPool.set(driver);
+    }
+
+    <span class="kw">protected</span> <span class="ty">WebDriver</span> getDriver() { <span class="kw">return</span> driverPool.get(); }
+
+    <span class="an">@AfterMethod</span>
+    <span class="kw">public void</span> tearDown() {
+        <span class="kw">if</span> (getDriver() != <span class="kw">null</span>) getDriver().quit(); <span class="cm">// always close</span>
+        driverPool.remove();
+    }
+}</pre></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       TAB 4 — React Fixes
+  ════════════════════════════════════════════════════ -->
+  <div id="tab-react" class="tab-panel">
+    <h2>Why React needs special handling</h2>
+    <p>SauceDemo is a React single-page app. Three standard Selenium behaviours silently fail on React pages. Here is exactly why, and what the framework does instead.</p>
+
+    <h3>Problem 1 — Clicking buttons</h3>
+    <div class="code-wrap"><pre><span class="cm">// Standard Selenium click</span>
+element.click();   <span class="cm">// ✗ Fires a WebDriver synthetic click</span>
+                   <span class="cm">//   React's event system may not respond</span>
+                   <span class="cm">//   Cart badge stays at 0, button label doesn't change</span>
+
+<span class="cm">// Framework fix</span>
+jsClick(element);  <span class="cm">// ✓ Fires a native DOM click via JavaScript</span>
+                   <span class="cm">//   React's delegated event listener always catches it</span></pre></div>
+    <div class="callout"><strong>Why does this happen?</strong> React 17+ moved event delegation from individual DOM nodes to the root container. WebDriver's <code>element.click()</code> dispatches a synthetic event at the element level, which can miss React's root-level listener. A direct JavaScript click fires at the DOM level and is always caught.</div>
+
+    <h3>Problem 2 — Typing into form fields</h3>
+    <div class="code-wrap"><pre><span class="cm">// Standard Selenium type</span>
+element.clear();               <span class="cm">// ✗ Clears the DOM value</span>
+element.sendKeys(<span class="str">"John"</span>);     <span class="cm">//   but React's internal state stays empty</span>
+                               <span class="cm">//   Clicking Continue → "First Name is required"</span>
+
+<span class="cm">// Framework fix — typeReact()</span>
+<span class="kw">var</span> setter = Object.getOwnPropertyDescriptor(
+    window.HTMLInputElement.prototype, <span class="str">'value'</span>).set;
+setter.call(element, <span class="str">"John"</span>);  <span class="cm">// ✓ Uses the ORIGINAL native setter</span>
+element.dispatchEvent(          <span class="cm">// ✓ Fires 'input' event that React's</span>
+    <span class="kw">new</span> Event(<span class="str">'input'</span>, { bubbles: <span class="kw">true</span> })); <span class="cm">//  onChange handler catches</span></pre></div>
+    <div class="callout"><strong>Why does this happen?</strong> React overrides the native <code>input.value</code> setter to track changes. <code>element.clear()</code> bypasses React's override and resets the DOM without telling React. The framework uses <code>Object.getOwnPropertyDescriptor</code> to get the original native setter (before React patched it), then dispatches a bubbling <code>input</code> event so React's <code>onChange</code> fires and its state syncs.</div>
+
+    <h3>Problem 3 — Stale element references</h3>
+    <div class="code-wrap"><pre><span class="cm">// After jsClick("Add to cart"), React re-renders the button node</span>
+<span class="cm">// The old WebElement reference points to a REMOVED DOM node</span>
+
+<span class="cm">// ✗ Using a stored reference — throws StaleElementReferenceException</span>
+wait.until(ExpectedConditions
+    .textToBePresentInElement(button, <span class="str">"Remove"</span>));
+
+<span class="cm">// ✓ Framework fix — waitForTextInElement(By locator, text)</span>
+<span class="cm">//   Re-finds the element fresh on every retry using the CSS locator</span>
+<span class="ty">By</span> nth = By.cssSelector(<span class="str">".inventory_item:nth-child(1) .btn_inventory"</span>);
+wait.waitForTextInElement(nth, <span class="str">"Remove"</span>);  <span class="cm">// always gets the live node</span></pre></div>
+    <div class="callout"><strong>Why does this happen?</strong> When React updates its virtual DOM and reconciles it with the real DOM, it may replace a button node entirely (even if it looks the same visually). The old <code>WebElement</code> reference now points to a detached node — accessing it throws <code>StaleElementReferenceException</code>. Passing a <code>By</code> locator instead of a <code>WebElement</code> to the wait re-runs <code>driver.findElement()</code> on each retry, always getting the current live node.</div>
+
+    <h3>Quick reference — which method to use</h3>
+    <div style="overflow-x:auto">
+    <table class="compare">
+      <thead><tr><th>Situation</th><th>Use</th><th>Not</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Click any button or link in SauceDemo</td>
+          <td class="mono">jsClick(element)</td>
+          <td><span class="badge-fail">element.click()</span></td>
+        </tr>
+        <tr>
+          <td>Type into checkout form fields</td>
+          <td class="mono">typeReact(field, "value")</td>
+          <td><span class="badge-fail">type(field, "value")</span></td>
+        </tr>
+        <tr>
+          <td>Type into login form (not React-controlled)</td>
+          <td class="mono">type(field, "value")</td>
+          <td>either works here</td>
+        </tr>
+        <tr>
+          <td>Wait for button text to change after cart action</td>
+          <td class="mono">waitForTextInElement(By, "text")</td>
+          <td><span class="badge-fail">waitForTextInElement(element, "text")</span></td>
+        </tr>
+        <tr>
+          <td>Wait for page navigation</td>
+          <td class="mono">waitForUrlContains("cart.html")</td>
+          <td><span class="badge-fail">Thread.sleep(2000)</span></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  function toggleLayer(name) {
+    var detail = document.getElementById('detail-' + name);
+    var layer  = document.getElementById('lyr-' + name);
+    var isOpen = detail.classList.contains('open');
+    detail.classList.toggle('open', !isOpen);
+    layer.classList.toggle('active', !isOpen);
+  }
+</script>

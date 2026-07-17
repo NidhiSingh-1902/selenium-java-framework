@@ -54,4 +54,9 @@ public class LoginPage extends BasePage {
     public boolean isErrorDisplayed() {
         return isDisplayed(errorMessage);
     }
+
+    /** Returns true if the login page is loaded (username input is visible in the DOM). */
+    public boolean isPageLoaded() {
+        return isDisplayed(usernameField);
+    }
 }

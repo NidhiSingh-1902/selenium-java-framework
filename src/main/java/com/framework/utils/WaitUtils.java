@@ -148,4 +148,18 @@ public class WaitUtils {
     public boolean waitForTextInElement(WebElement element, String text) {
         return wait.until(ExpectedConditions.textToBePresentInElement(element, text));
     }
+
+    /**
+     * Waits until an element found by the given locator contains the specified text.
+     * Re-finds the element on every poll — immune to StaleElementReferenceException
+     * caused by React re-renders. Prefer this over waitForTextInElement(WebElement)
+     * whenever the element might be replaced in the DOM after a user action.
+     *
+     * @param locator By locator used to find the element each poll
+     * @param text    Text that should appear in the element
+     * @return true once the text is present
+     */
+    public boolean waitForTextInElement(By locator, String text) {
+        return wait.until(ExpectedConditions.textToBePresentInElementLocated(locator, text));
+    }
 }

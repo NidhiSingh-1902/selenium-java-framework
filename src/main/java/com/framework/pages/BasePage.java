@@ -135,6 +135,34 @@ public class BasePage {
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
     }
 
+    /**
+     * Sets a value in a React-controlled input and dispatches a native 'input' event
+     * so that React's onChange handler fires and its internal state is updated.
+     *
+     * WHY not just type()?
+     *   React wraps the native input.value setter so it can detect programmatic changes.
+     *   WebDriver's element.clear() bypasses this and leaves React's internal state as "".
+     *   element.sendKeys() triggers keydown/keypress/keyup — React may or may not pick
+     *   those up depending on the React version. The reliable cross-version approach is:
+     *   1. Use the ORIGINAL native setter (retrieved before React overwrites it)
+     *   2. Call it directly via Object.getOwnPropertyDescriptor
+     *   3. Dispatch a bubbling 'input' event that React's event listener always catches
+     *
+     * Use this for all <input> and <textarea> fields on SauceDemo checkout forms.
+     *
+     * @param element The input or textarea element
+     * @param text    The value to set — use "" to clear the field
+     */
+    protected void typeReact(WebElement element, String text) {
+        wait.waitForVisible(element);
+        ((JavascriptExecutor) driver).executeScript(
+                "var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;" +
+                "setter.call(arguments[0], arguments[1]);" +
+                "arguments[0].dispatchEvent(new Event('input', { bubbles: true }));",
+                element, text);
+        log.debug("typeReact set value '{}' on element", text);
+    }
+
     /** Returns the current browser tab's page title. */
     public String getPageTitle() {
         return driver.getTitle();

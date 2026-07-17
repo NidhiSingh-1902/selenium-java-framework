@@ -20,4 +20,46 @@
         </classes>
     </test>
 
+    <!-- Product Detail Page Tests -->
+    <test name="Product Detail Tests">
+        <classes>
+            <class name="com.tests.ProductDetailTest"/>
+        </classes>
+    </test>
+
+    <!-- Cart Page Tests -->
+    <test name="Cart Tests">
+        <classes>
+            <class name="com.tests.CartTest"/>
+        </classes>
+    </test>
+
+    <!-- Checkout Step 1 Tests -->
+    <test name="Checkout Step 1 Tests">
+        <classes>
+            <class name="com.tests.CheckoutStep1Test"/>
+        </classes>
+    </test>
+
+    <!-- Checkout Step 2 Tests -->
+    <test name="Checkout Step 2 Tests">
+        <classes>
+            <class name="com.tests.CheckoutStep2Test"/>
+        </classes>
+    </test>
+
+    <!-- Order Complete Tests -->
+    <test name="Order Complete Tests">
+        <classes>
+            <class name="com.tests.OrderCompleteTest"/>
+        </classes>
+    </test>
+
+    <!-- Burger Menu Tests -->
+    <test name="Menu Tests">
+        <classes>
+            <class name="com.tests.MenuTest"/>
+        </classes>
+    </test>
+
 </suite>

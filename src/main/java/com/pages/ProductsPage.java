@@ -5,7 +5,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,13 +46,29 @@ public class ProductsPage extends BasePage {
     @FindBy(css = ".product_sort_container")
     private WebElement sortDropdown;
 
-    /** All product name links on the page — 6 items on SauceDemo */
+    /** All product name text divs — used for reading the product name text */
     @FindBy(css = ".inventory_item_name")
     private List<WebElement> productNames;
 
     /** All product price labels — e.g. "$29.99" */
     @FindBy(css = ".inventory_item_price")
     private List<WebElement> productPrices;
+
+    /**
+     * The <a> anchor links that wrap each product name.
+     * SauceDemo marks these with data-test="item-4-title-link" (hyphen format).
+     * Using data-test avoids the href="#" problem — we extract the product ID
+     * from this attribute to construct the navigation URL.
+     */
+    @FindBy(css = "a[data-test$='-title-link']")
+    private List<WebElement> productNameLinks;
+
+    /**
+     * The <a> anchor links that wrap each product thumbnail image.
+     * SauceDemo marks these with data-test="item-4-img-link".
+     */
+    @FindBy(css = "a[data-test$='-img-link']")
+    private List<WebElement> productImageLinks;
 
     /**
      * All cart toggle buttons — each starts as "Add to cart".
@@ -134,6 +149,60 @@ public class ProductsPage extends BasePage {
         return getText(productPrices.get(0));
     }
 
+    /**
+     * Returns the price of the product at a specific index.
+     * @param index 0-based position (matches the corresponding product name position)
+     * Used in tests to compare a product's price here vs on its detail page.
+     */
+    public String getProductPrice(int index) {
+        return getText(productPrices.get(index));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Navigation to Product Detail Page
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Navigates to a product's detail page by constructing the URL from data-test attribute.
+     *
+     * WHY data-test extraction instead of clicking or href?
+     *   SauceDemo's React Router links render with href="#" — both getAttribute("href")
+     *   and element.click() fail to navigate. The data-test attribute follows the pattern
+     *   "item-4-title-link", so we extract the ID segment and build the absolute URL.
+     *
+     * @param index 0-based position of the product to open
+     */
+    public void clickProductName(int index) {
+        WebElement link = productNameLinks.get(index);
+        wait.waitForVisible(link);
+        // data-test="item-4-title-link" → split("-") → [item, 4, title, link] → [1]="4"
+        // This bypasses href="#" entirely — we build the absolute URL from the product ID.
+        String dataTest = link.getAttribute("data-test");
+        String productId = dataTest.split("-")[1];
+        String productUrl = "https://www.saucedemo.com/inventory-item.html?id=" + productId;
+        driver.get(productUrl);
+        wait.waitForUrlContains("inventory-item");
+        log.info("Navigated to product id={} at index {}", productId, index);
+    }
+
+    /**
+     * Navigates to a product's detail page by its thumbnail image link.
+     * Uses the same data-test ID extraction strategy as clickProductName.
+     *
+     * @param index 0-based position of the product image to open
+     */
+    public void clickProductImage(int index) {
+        WebElement link = productImageLinks.get(index);
+        wait.waitForVisible(link);
+        // data-test="item-4-img-link" → split("-") → [item, 4, img, link] → [1]="4"
+        String dataTest = link.getAttribute("data-test");
+        String productId = dataTest.split("-")[1];
+        String productUrl = "https://www.saucedemo.com/inventory-item.html?id=" + productId;
+        driver.get(productUrl);
+        wait.waitForUrlContains("inventory-item");
+        log.info("Navigated via image to product id={} at index {}", productId, index);
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Sort methods
     // ─────────────────────────────────────────────────────────────
@@ -157,24 +226,41 @@ public class ProductsPage extends BasePage {
     // ─────────────────────────────────────────────────────────────
 
     /**
-     * Clicks the "Add to cart" button for the product at the given index.
-     * After clicking, the button text changes to "Remove".
+     * Clicks "Add to cart" for the product at the given index.
+     *
+     * WHY jsClick + locator-based text wait?
+     *   jsClick fires a native JS event that React's synthetic event system always
+     *   handles — WebDriver's element.click() can fail on React pages where event
+     *   delegation doesn't propagate as expected.
+     *   After clicking, the button DOM node is replaced by React, so the old WebElement
+     *   reference becomes stale. waitForTextInElement(By locator, text) re-finds the
+     *   element on every poll, avoiding StaleElementReferenceException.
+     *
      * @param index 0-based position matching the product's position on screen
      */
     public void addToCart(int index) {
-        click(cartButtons.get(index));
-        log.info("Clicked Add to cart for product at index {}", index);
+        WebElement button = cartButtons.get(index);
+        wait.waitForVisible(button);
+        jsClick(button);
+        // Target the Nth product's button specifically so the wait is correct even
+        // when multiple products are already in the cart (first button already says "Remove")
+        By nthButton = By.cssSelector(".inventory_item:nth-child(" + (index + 1) + ") .btn_inventory");
+        wait.waitForTextInElement(nthButton, "Remove");
+        log.info("Added product at index {} to cart", index);
     }
 
     /**
-     * Clicks the "Remove" button for the product at the given index.
-     * Only call this after the product has already been added to the cart,
-     * otherwise the button still says "Add to cart" and you will add instead of remove.
+     * Clicks "Remove" for the product at the given index.
+     * Uses jsClick and waits for the specific product's button to return to "Add to cart".
      * @param index 0-based position matching the product's position on screen
      */
     public void removeFromCart(int index) {
-        click(cartButtons.get(index));
-        log.info("Clicked Remove for product at index {}", index);
+        WebElement button = cartButtons.get(index);
+        wait.waitForVisible(button);
+        jsClick(button);
+        By nthButton = By.cssSelector(".inventory_item:nth-child(" + (index + 1) + ") .btn_inventory");
+        wait.waitForTextInElement(nthButton, "Add to cart");
+        log.info("Removed product at index {} from cart", index);
     }
 
     /**
@@ -203,9 +289,14 @@ public class ProductsPage extends BasePage {
         return Integer.parseInt(badges.get(0).getText().trim());
     }
 
-    /** Clicks the cart icon to navigate to the cart page (/cart.html) */
+    /**
+     * Clicks the cart icon to navigate to the cart page (/cart.html).
+     * Uses jsClick + URL wait — same pattern as all React navigation actions.
+     */
     public void goToCart() {
-        click(cartIcon);
+        wait.waitForVisible(cartIcon);
+        jsClick(cartIcon);
+        wait.waitForUrlContains("cart.html");
         log.info("Navigated to cart page");
     }
 
@@ -216,12 +307,16 @@ public class ProductsPage extends BasePage {
     /**
      * Opens the burger menu (☰) and clicks Logout.
      * After this call the browser returns to the login page.
+     *
+     * WHY delegate to BurgerMenuPage?
+     *   The react-burger-menu requires jsClick() to open and aria-hidden polling
+     *   to confirm the animation completed. BurgerMenuPage already encapsulates
+     *   all of that logic; reusing it avoids duplicating the React-specific waits.
      */
     public void logout() {
-        click(menuButton);
-        // Wait for the slide-in menu animation to finish before clicking logout
-        wait.waitForVisible(logoutLink);
-        click(logoutLink);
+        BurgerMenuPage burgerMenu = new BurgerMenuPage(driver);
+        burgerMenu.openMenu();
+        burgerMenu.clickLogout();
         log.info("Logged out from Products page");
     }
 }

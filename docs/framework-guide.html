@@ -1,0 +1,869 @@
+<title>Selenium Java Framework — Team Guide</title>
+<meta name="description" content="How to use, extend, and run the SauceDemo Selenium 4 + Java + TestNG test automation framework.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:          #f4f5fb;
+    --surface:     #ffffff;
+    --border:      #dde0f0;
+    --accent:      #2563d4;
+    --accent-soft: #e8eeff;
+    --text:        #1c1f2e;
+    --muted:       #5e6380;
+    --pass:        #15803d;
+    --pass-bg:     #dcfce7;
+    --code-bg:     #1c2033;
+    --code-text:   #cdd3f0;
+    --kw:          #79b8ff;
+    --an:          #f69d50;
+    --ty:          #7ec8a4;
+    --str:         #9ecbff;
+    --cm:          #6b7394;
+    --font-mono:   'Courier New', Courier, monospace;
+    --font-sans:   'Segoe UI', system-ui, -apple-system, sans-serif;
+    --r:           6px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.7;
+    padding: 2rem 1.5rem 6rem;
+  }
+
+  /* ── Page layout ─────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 3rem;
+    max-width: 1020px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  /* ── TOC sidebar ─────────────────────────────────────── */
+  .toc {
+    position: sticky;
+    top: 2rem;
+  }
+
+  .toc-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .toc ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .toc a {
+    display: block;
+    font-size: 0.825rem;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0.3rem 0.6rem;
+    border-left: 2px solid transparent;
+    border-radius: 0 var(--r) var(--r) 0;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .toc a.sub {
+    padding-left: 1.2rem;
+    font-size: 0.78rem;
+  }
+
+  /* ── Main content ────────────────────────────────────── */
+  .main { min-width: 0; }
+
+  /* ── Page header ─────────────────────────────────────── */
+  .page-header {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+
+  .page-header h1 {
+    font-family: var(--font-mono);
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+    text-wrap: balance;
+    margin-bottom: 0.75rem;
+  }
+
+  .page-header p {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 56ch;
+    margin-bottom: 1.4rem;
+  }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .stat .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--pass);
+    flex-shrink: 0;
+  }
+
+  .stat .dot.blue { background: var(--accent); }
+
+  /* ── Sections ────────────────────────────────────────── */
+  section {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 1.5rem;
+  }
+
+  section h2 {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  section h2::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 1.1em;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  section h3 {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 1.8rem 0 0.7rem;
+  }
+
+  section p {
+    color: var(--text);
+    margin-bottom: 0.85rem;
+    max-width: 66ch;
+  }
+
+  /* ── Cards ───────────────────────────────────────────── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* ── Prerequisites list ──────────────────────────────── */
+  .prereq-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .prereq {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1rem 1.2rem;
+  }
+
+  .prereq-name {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+
+  .prereq-ver {
+    font-size: 0.78rem;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    margin-bottom: 0.3rem;
+  }
+
+  .prereq-note {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  /* ── Code blocks ─────────────────────────────────────── */
+  .code-wrap { overflow-x: auto; }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.65;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--r);
+    overflow-x: auto;
+    tab-size: 4;
+  }
+
+  pre .kw  { color: var(--kw); }
+  pre .an  { color: var(--an); }
+  pre .ty  { color: var(--ty); }
+  pre .str { color: var(--str); }
+  pre .cm  { color: var(--cm); font-style: italic; }
+  pre .mt  { color: #cdd3f0; }
+  pre .num { color: #f8c555; }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 0.15em 0.45em;
+    border-radius: 3px;
+  }
+
+  /* ── Shell / terminal ────────────────────────────────── */
+  .shell {
+    background: #0f1117;
+    color: #b0f0b0;
+    font-family: var(--font-mono);
+    font-size: 0.83rem;
+    line-height: 1.7;
+    padding: 1.1rem 1.4rem;
+    border-radius: var(--r);
+    overflow-x: auto;
+  }
+
+  .shell .prompt { color: #5a9f5a; user-select: none; }
+  .shell .comment { color: #4a7a4a; }
+
+  /* ── Directory tree ──────────────────────────────────── */
+  .tree {
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.8;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--r);
+    overflow-x: auto;
+  }
+
+  .tree .dir  { color: var(--ty); font-weight: 700; }
+  .tree .file { color: var(--code-text); }
+  .tree .note { color: var(--cm); }
+
+  /* ── Tables ──────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  thead th {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.6rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f8f9fd; }
+
+  tbody td {
+    padding: 0.65rem 1rem;
+    vertical-align: top;
+  }
+
+  td.mono { font-family: var(--font-mono); font-size: 0.8rem; }
+  td.pass { color: var(--pass); font-weight: 600; font-family: var(--font-mono); font-size: 0.8rem; }
+
+  .badge {
+    display: inline-block;
+    background: var(--pass-bg);
+    color: var(--pass);
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    padding: 0.15em 0.6em;
+    border-radius: 10px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Step list ───────────────────────────────────────── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    counter-reset: step;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.75rem;
+    align-items: start;
+    counter-increment: step;
+  }
+
+  .step-num {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+  }
+
+  .step-body { min-width: 0; }
+  .step-body strong { display: block; margin-bottom: 0.3rem; font-size: 0.92rem; }
+  .step-body p { margin-bottom: 0.5rem; color: var(--muted); font-size: 0.88rem; }
+
+  /* ── Callout ─────────────────────────────────────────── */
+  .callout {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--r) var(--r) 0;
+    padding: 0.9rem 1.2rem;
+    font-size: 0.88rem;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .callout strong { color: var(--accent); }
+
+  /* ── Responsive ──────────────────────────────────────── */
+  @media (max-width: 760px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+    .toc {
+      position: static;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .toc ul { flex-direction: row; flex-wrap: wrap; gap: 0.2rem; }
+    .toc a { border-left: none; border-bottom: 2px solid transparent; border-radius: var(--r) var(--r) 0 0; }
+    .toc a:hover { border-bottom-color: var(--accent); }
+    .toc a.sub { display: none; }
+    .prereq-list { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 1.25rem 1rem 4rem; }
+    .prereq-list { grid-template-columns: 1fr; }
+    .page-header h1 { font-size: 1.45rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+
+<div class="layout">
+
+  <!-- ── TOC ──────────────────────────────────────────── -->
+  <nav class="toc" aria-label="Page contents">
+    <div class="toc-label">On this page</div>
+    <ul>
+      <li><a href="#prerequisites">Prerequisites</a></li>
+      <li><a href="#quickstart">Quick Start</a></li>
+      <li><a href="#structure">Project Structure</a></li>
+      <li><a href="#add-page">Add a Page Object</a></li>
+      <li><a href="#add-test">Add a Test Class</a></li>
+      <li><a href="#base-methods">BasePage Methods</a></li>
+      <li><a href="#react-patterns">React Patterns</a></li>
+      <li><a href="#running">Running Tests</a></li>
+      <li><a href="#modules">Modules Reference</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Main ─────────────────────────────────────────── -->
+  <main class="main">
+
+    <header class="page-header">
+      <div class="eyebrow">Test Automation Framework</div>
+      <h1>selenium-java-framework</h1>
+      <p>A Page Object Model framework built on Selenium 4, Java 17, and TestNG for end-to-end testing of SauceDemo. Clone, extend, and run — no additional setup required.</p>
+      <div class="stats">
+        <span class="stat"><span class="dot"></span>54 tests passing</span>
+        <span class="stat"><span class="dot"></span>8 modules</span>
+        <span class="stat"><span class="dot blue"></span>Selenium 4.18.1</span>
+        <span class="stat"><span class="dot blue"></span>Java 17</span>
+        <span class="stat"><span class="dot blue"></span>TestNG 7.9.0</span>
+      </div>
+    </header>
+
+    <!-- ── Prerequisites ──────────────────────────────── -->
+    <section id="prerequisites">
+      <h2>Prerequisites</h2>
+      <p>Install these tools before cloning. Versions must match to avoid ChromeDriver compatibility errors.</p>
+      <div class="prereq-list">
+        <div class="prereq">
+          <div class="prereq-name">Java JDK</div>
+          <div class="prereq-ver">17 or higher</div>
+          <div class="prereq-note">Set JAVA_HOME in system environment variables</div>
+        </div>
+        <div class="prereq">
+          <div class="prereq-name">Apache Maven</div>
+          <div class="prereq-ver">3.9.x</div>
+          <div class="prereq-note">Add Maven bin/ to your PATH</div>
+        </div>
+        <div class="prereq">
+          <div class="prereq-name">Google Chrome</div>
+          <div class="prereq-ver">150.x (must match driver)</div>
+          <div class="prereq-note">Check your version: chrome://settings/help</div>
+        </div>
+        <div class="prereq">
+          <div class="prereq-name">ChromeDriver</div>
+          <div class="prereq-ver">150.x (auto-managed)</div>
+          <div class="prereq-note">WebDriverManager downloads it automatically — no manual install</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Quick Start ────────────────────────────────── -->
+    <section id="quickstart">
+      <h2>Quick Start</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Clone the repository</strong>
+            <div class="code-wrap">
+              <div class="shell"><span class="prompt">$ </span>git clone https://github.com/NidhiSingh-1902/selenium-java-framework.git<br><span class="prompt">$ </span>cd selenium-java-framework</div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Run the full suite</strong>
+            <p>This compiles the project, launches Chrome, runs all 54 tests, and generates a report.</p>
+            <div class="code-wrap">
+              <div class="shell"><span class="prompt">$ </span>mvn test<br><br><span class="comment"># Run a single module only</span><br><span class="prompt">$ </span>mvn test -Dtest=CartTest<br><br><span class="comment"># Run multiple modules</span><br><span class="prompt">$ </span>mvn test -Dtest=CartTest,CheckoutStep1Test</div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Check results</strong>
+            <p>Test reports are written to <code>target/surefire-reports/</code> after each run. Open any <code>.txt</code> file for a plain-text summary or the <code>.xml</code> files for CI integration.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Project Structure ──────────────────────────── -->
+    <section id="structure">
+      <h2>Project Structure</h2>
+      <div class="code-wrap">
+        <div class="tree">
+<span class="dir">selenium-java-framework/</span>
+├── <span class="dir">src/main/java/com/</span>
+│   ├── <span class="dir">framework/</span>
+│   │   ├── <span class="dir">base/</span>        <span class="file">BaseTest.java</span>      <span class="note">── @BeforeMethod / @AfterMethod, driver lifecycle</span>
+│   │   ├── <span class="dir">pages/</span>       <span class="file">BasePage.java</span>      <span class="note">── click, type, typeReact, jsClick, getText…</span>
+│   │   └── <span class="dir">utils/</span>       <span class="file">WaitUtils.java</span>     <span class="note">── waitForVisible, waitForUrlContains…</span>
+│   └── <span class="dir">pages/</span>
+│       ├── <span class="file">LoginPage.java</span>
+│       ├── <span class="file">ProductsPage.java</span>
+│       ├── <span class="file">ProductDetailPage.java</span>
+│       ├── <span class="file">CartPage.java</span>
+│       ├── <span class="file">CheckoutStep1Page.java</span>
+│       ├── <span class="file">CheckoutStep2Page.java</span>
+│       ├── <span class="file">OrderCompletePage.java</span>
+│       └── <span class="file">BurgerMenuPage.java</span>
+│
+└── <span class="dir">src/test/java/com/tests/</span>
+│   ├── <span class="file">LoginTest.java</span>            <span class="note">── 6 tests</span>
+│   ├── <span class="file">ProductsTest.java</span>         <span class="note">── 10 tests</span>
+│   ├── <span class="file">ProductDetailTest.java</span>    <span class="note">── 7 tests</span>
+│   ├── <span class="file">CartTest.java</span>             <span class="note">── 8 tests</span>
+│   ├── <span class="file">CheckoutStep1Test.java</span>    <span class="note">── 7 tests</span>
+│   ├── <span class="file">CheckoutStep2Test.java</span>    <span class="note">── 6 tests</span>
+│   ├── <span class="file">OrderCompleteTest.java</span>    <span class="note">── 5 tests</span>
+│   └── <span class="file">MenuTest.java</span>             <span class="note">── 5 tests</span>
+│
+└── <span class="dir">src/test/resources/</span>
+    └── <span class="file">testng.xml</span>                <span class="note">── suite config, parallel="methods" thread-count="2"</span></div>
+      </div>
+    </section>
+
+    <!-- ── Add a Page Object ──────────────────────────── -->
+    <section id="add-page">
+      <h2>Add a New Page Object</h2>
+      <p>Every page of the application gets its own class. The pattern is always the same: extend <code>BasePage</code>, declare locators with <code>@FindBy</code>, write action methods.</p>
+      <div class="callout"><strong>Rule:</strong> Never put raw Selenium calls in test classes. All browser interactions belong in page objects.</div>
+
+      <div class="code-wrap">
+        <pre><span class="kw">package</span> com.pages;
+
+<span class="kw">import</span> com.framework.pages.BasePage;
+<span class="kw">import</span> org.openqa.selenium.WebDriver;
+<span class="kw">import</span> org.openqa.selenium.WebElement;
+<span class="kw">import</span> org.openqa.selenium.support.FindBy;
+
+<span class="kw">public class</span> <span class="ty">MyNewPage</span> <span class="kw">extends</span> <span class="ty">BasePage</span> {
+
+    <span class="cm">// 1. Declare locators with @FindBy — PageFactory wires them up automatically</span>
+    <span class="an">@FindBy</span>(id = <span class="str">"page-title"</span>)
+    <span class="kw">private</span> <span class="ty">WebElement</span> pageTitle;
+
+    <span class="an">@FindBy</span>(css = <span class="str">".submit-btn"</span>)
+    <span class="kw">private</span> <span class="ty">WebElement</span> submitButton;
+
+    <span class="cm">// 2. Constructor — always call super(driver)</span>
+    <span class="kw">public</span> <span class="ty">MyNewPage</span>(<span class="ty">WebDriver</span> driver) {
+        <span class="kw">super</span>(driver);
+    }
+
+    <span class="cm">// 3. Page state</span>
+    <span class="kw">public boolean</span> isPageLoaded() {
+        <span class="kw">return</span> isDisplayed(pageTitle)
+            &amp;&amp; driver.getCurrentUrl().contains(<span class="str">"my-page"</span>);
+    }
+
+    <span class="cm">// 4. Action methods — use inherited helpers, not raw Selenium</span>
+    <span class="kw">public void</span> clickSubmit() {
+        wait.waitForVisible(submitButton);
+        jsClick(submitButton);
+        wait.waitForUrlContains(<span class="str">"next-page"</span>);
+    }
+}</pre>
+      </div>
+
+      <h3>Register it in testng.xml</h3>
+      <p>Add a new <code>&lt;test&gt;</code> block for the corresponding test class:</p>
+      <div class="code-wrap">
+        <pre><span class="cm">&lt;!-- src/test/resources/testng.xml --&gt;</span>
+<span class="kw">&lt;test</span> <span class="an">name</span>=<span class="str">"My New Page Tests"</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;classes&gt;</span>
+        <span class="kw">&lt;class</span> <span class="an">name</span>=<span class="str">"com.tests.MyNewPageTest"</span><span class="kw">/&gt;</span>
+    <span class="kw">&lt;/classes&gt;</span>
+<span class="kw">&lt;/test&gt;</span></pre>
+      </div>
+    </section>
+
+    <!-- ── Add a Test ──────────────────────────────────── -->
+    <section id="add-test">
+      <h2>Add a New Test Class</h2>
+      <p>Test classes extend <code>BaseTest</code> (which manages the browser lifecycle) and follow the <strong>Arrange → Act → Assert</strong> pattern.</p>
+      <div class="code-wrap">
+        <pre><span class="kw">package</span> com.tests;
+
+<span class="kw">import</span> com.framework.base.BaseTest;
+<span class="kw">import</span> com.pages.LoginPage;
+<span class="kw">import</span> com.pages.MyNewPage;
+<span class="kw">import</span> org.testng.Assert;
+<span class="kw">import</span> org.testng.annotations.Test;
+
+<span class="kw">public class</span> <span class="ty">MyNewPageTest</span> <span class="kw">extends</span> <span class="ty">BaseTest</span> {
+
+    <span class="cm">// Helper — shared setup steps go here, not in @BeforeMethod</span>
+    <span class="kw">private</span> <span class="ty">MyNewPage</span> loginAndNavigate() {
+        <span class="ty">LoginPage</span> login = <span class="kw">new</span> <span class="ty">LoginPage</span>(getDriver());
+        login.login(<span class="str">"standard_user"</span>, <span class="str">"secret_sauce"</span>);
+        <span class="cm">// ... navigate to the page</span>
+        <span class="kw">return new</span> <span class="ty">MyNewPage</span>(getDriver());
+    }
+
+    <span class="cm">// Test ID format: TC-[MODULE]-[NUMBER]</span>
+    <span class="an">@Test</span>(priority = <span class="num">1</span>, description = <span class="str">"TC-MN-01: Page should load with correct heading"</span>)
+    <span class="kw">public void</span> pageLoadsTest() {
+        <span class="cm">// Arrange + Act</span>
+        <span class="ty">MyNewPage</span> page = loginAndNavigate();
+
+        <span class="cm">// Assert</span>
+        Assert.assertTrue(page.isPageLoaded(), <span class="str">"Page should be loaded"</span>);
+        log.info(<span class="str">"TC-MN-01 PASSED"</span>);
+    }
+}</pre>
+      </div>
+
+      <h3>Test ID naming convention</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Module</th><th>Prefix</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Login</td><td class="mono">TC-LG-</td><td class="mono">TC-LG-01</td></tr>
+            <tr><td>Products</td><td class="mono">TC-PR-</td><td class="mono">TC-PR-04</td></tr>
+            <tr><td>Product Detail</td><td class="mono">TC-PD-</td><td class="mono">TC-PD-02</td></tr>
+            <tr><td>Cart</td><td class="mono">TC-CT-</td><td class="mono">TC-CT-05</td></tr>
+            <tr><td>Checkout Step 1</td><td class="mono">TC-C1-</td><td class="mono">TC-C1-03</td></tr>
+            <tr><td>Checkout Step 2</td><td class="mono">TC-C2-</td><td class="mono">TC-C2-06</td></tr>
+            <tr><td>Order Complete</td><td class="mono">TC-OC-</td><td class="mono">TC-OC-01</td></tr>
+            <tr><td>Burger Menu</td><td class="mono">TC-MN-</td><td class="mono">TC-MN-05</td></tr>
+            <tr><td>Your new module</td><td class="mono">TC-XX-</td><td class="mono">TC-XX-01</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── BasePage Methods ────────────────────────────── -->
+    <section id="base-methods">
+      <h2>BasePage Methods</h2>
+      <p>All page objects inherit these methods. Use them instead of calling Selenium directly.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Method</th><th>When to use</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="mono">click(element)</td>
+              <td>Standard click — waits for element to be clickable first</td>
+            </tr>
+            <tr>
+              <td class="mono">jsClick(element)</td>
+              <td><strong>Use this for all React buttons and links.</strong> JavaScript click bypasses React's synthetic event system issues</td>
+            </tr>
+            <tr>
+              <td class="mono">type(element, text)</td>
+              <td>Clear field and type — for non-React inputs (login form, search boxes)</td>
+            </tr>
+            <tr>
+              <td class="mono">typeReact(element, text)</td>
+              <td><strong>Use this for React controlled inputs.</strong> Sets value via native setter + fires an input event so React's onChange updates internal state</td>
+            </tr>
+            <tr>
+              <td class="mono">getText(element)</td>
+              <td>Get visible text — waits for element visibility, returns trimmed string</td>
+            </tr>
+            <tr>
+              <td class="mono">isDisplayed(element)</td>
+              <td>Safe visibility check — returns false instead of throwing when element is absent</td>
+            </tr>
+            <tr>
+              <td class="mono">scrollToElement(element)</td>
+              <td>Scroll element into viewport — use before interacting with off-screen elements</td>
+            </tr>
+            <tr>
+              <td class="mono">getPageTitle()</td>
+              <td>Returns the browser tab title</td>
+            </tr>
+            <tr>
+              <td class="mono">getCurrentUrl()</td>
+              <td>Returns the current browser URL</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>WaitUtils (via <code>wait.*</code>)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Method</th><th>When to use</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">wait.waitForVisible(element)</td><td>Wait until element is visible — use before reading text or clicking</td></tr>
+            <tr><td class="mono">wait.waitForClickable(element)</td><td>Wait until element is enabled and clickable</td></tr>
+            <tr><td class="mono">wait.waitForUrlContains(fragment)</td><td>Wait for navigation — pass a URL fragment like <code>"cart.html"</code></td></tr>
+            <tr><td class="mono">wait.waitForTextInElement(By, text)</td><td>Stale-safe text wait — use after React re-renders a button (e.g. "Add to cart" → "Remove")</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── React Patterns ──────────────────────────────── -->
+    <section id="react-patterns">
+      <h2>React-Specific Patterns</h2>
+      <p>SauceDemo is built with React. Two common Selenium approaches silently fail on React pages — here is why and what to use instead.</p>
+
+      <h3>Clicking buttons and links</h3>
+      <div class="callout"><strong>Problem:</strong> <code>element.click()</code> triggers a synthetic click that React may not handle. Use <code>jsClick(element)</code> for all cart buttons, nav links, and form submits.</div>
+      <div class="code-wrap">
+        <pre><span class="cm">// ✗ Do not use — misses React event handlers on re-rendered nodes</span>
+element.click();
+
+<span class="cm">// ✓ Use this — fires a native DOM click React always catches</span>
+jsClick(element);</pre>
+      </div>
+
+      <h3>Typing into form fields</h3>
+      <div class="callout"><strong>Problem:</strong> <code>element.clear()</code> resets the DOM value but does not update React's internal state. The form still sees an empty field when submitted. Use <code>typeReact()</code> for all checkout form inputs.</div>
+      <div class="code-wrap">
+        <pre><span class="cm">// ✗ Do not use for React inputs — React's internal state stays empty</span>
+element.clear();
+element.sendKeys(<span class="str">"John"</span>);
+
+<span class="cm">// ✓ Use this — sets value via native setter + dispatches 'input' event</span>
+typeReact(firstNameField, <span class="str">"John"</span>);   <span class="cm">// React sees the value correctly</span>
+typeReact(lastNameField,  <span class="str">"Doe"</span>);
+typeReact(postalCodeField, <span class="str">"12345"</span>);</pre>
+      </div>
+
+      <h3>Waiting after React state changes</h3>
+      <div class="callout"><strong>Problem:</strong> After clicking "Add to cart", React re-renders the button node. A stale <code>WebElement</code> reference to the old node throws <code>StaleElementReferenceException</code>. Use <code>waitForTextInElement(By, text)</code> with a locator, not an element reference.</div>
+      <div class="code-wrap">
+        <pre><span class="cm">// ✗ Stale — the By.id locator-based element reference may be dead after React re-render</span>
+wait.until(ExpectedConditions.textToBePresentInElement(button, <span class="str">"Remove"</span>));
+
+<span class="cm">// ✓ Safe — re-finds the element by locator on each retry</span>
+<span class="ty">By</span> locator = By.cssSelector(<span class="str">".inventory_item:nth-child(1) .btn_inventory"</span>);
+wait.waitForTextInElement(locator, <span class="str">"Remove"</span>);</pre>
+      </div>
+    </section>
+
+    <!-- ── Running Tests ───────────────────────────────── -->
+    <section id="running">
+      <h2>Running Tests</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>What it runs</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">mvn test</td><td>Full suite — all 54 tests via testng.xml</td></tr>
+            <tr><td class="mono">mvn test -Dtest=CartTest</td><td>Single test class</td></tr>
+            <tr><td class="mono">mvn test -Dtest=CartTest,CheckoutStep1Test</td><td>Multiple specific classes</td></tr>
+            <tr><td class="mono">mvn test -Dtest=CartTest#cartPageLoadsTest</td><td>Single test method</td></tr>
+            <tr><td class="mono">mvn clean test</td><td>Clean compiled classes first, then run suite</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Test reports</h3>
+      <p>After <code>mvn test</code>, reports appear in <code>target/surefire-reports/</code>. Each class gets its own <code>.txt</code> summary. Look for lines marked <code>FAILURE!</code> to identify broken tests.</p>
+      <div class="code-wrap">
+        <div class="shell"><span class="comment"># Open the summary for a specific class</span><br><span class="prompt">$ </span>cat target/surefire-reports/com.tests.CartTest.txt</div>
+      </div>
+    </section>
+
+    <!-- ── Modules Reference ───────────────────────────── -->
+    <section id="modules">
+      <h2>Modules Reference</h2>
+      <p>All 8 modules cover the complete SauceDemo user journey end-to-end.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Module</th><th>Test Class</th><th>Tests</th><th>URL</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Login</td>
+              <td class="mono">LoginTest</td>
+              <td class="mono">6</td>
+              <td class="mono">/</td>
+              <td><span class="badge">PASS</span></td>
+            </tr>
+            <tr>
+              <td>Products</td>
+              <td class="mono">ProductsTest</td>
+              <td class="mono">10</td>
+              <td class="mono">/inventory.html</td>
+              <td><span class="badge">PASS</span></td>
+            </tr>
+            <tr>
+              <td>Product Detail</td>
+              <td class="mono">ProductDetailTest</td>
+              <td class="mono">7</td>
+              <td class="mono">/inventory-item.html</td>
+              <td><span class="badge">PASS</span></td>
+            </tr>
+            <tr>
+              <td>Cart</td>
+              <td class="mono">CartTest</td>
+              <td class="mono">8</td>
+              <td class="mono">/cart.html</td>
+              <td><span class="badge">PASS</span></td>
+            </tr>
+            <tr>
+              <td>Checkout Step 1</td>
+              <td class="mono">CheckoutStep1Test</td>
+              <td class="mono">7</td>
+              <td class="mono">/checkout-step-one.html</td>
+              <td><span class="badge">PASS</span></td>
+            </tr>
+            <tr>
+              <td>Checkout Step 2</td>
+              <td class="mono">CheckoutStep2Test</td>
+              <td class="mono">6</td>
+              <td class="mono">/checkout-step-two.html</td>
+              <td><span class="badge">PASS</span></td>
+            </tr>
+            <tr>
+              <td>Order Complete</td>
+              <td class="mono">OrderCompleteTest</td>
+              <td class="mono">5</td>
+              <td class="mono">/checkout-complete.html</td>
+              <td><span class="badge">PASS</span></td>
+            </tr>
+            <tr>
+              <td>Burger Menu</td>
+              <td class="mono">MenuTest</td>
+              <td class="mono">5</td>
+              <td class="mono">overlay (all pages)</td>
+              <td><span class="badge">PASS</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>

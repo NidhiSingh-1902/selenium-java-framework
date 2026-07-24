@@ -112,12 +112,20 @@ public class BaseTest {
         driver.set(webDriver);
         log.info("Browser launched: {}", browser);
 
-        // Navigate to base URL if configured; tests that need a specific URL override in @BeforeMethod
-        String baseUrl = ConfigReader.get("base.url", "");
+        // Navigate to base URL — subclasses override getBaseUrl() to point at a different app
+        String baseUrl = getBaseUrl();
         if (!baseUrl.isEmpty()) {
             webDriver.get(baseUrl);
             log.info("Navigated to: {}", baseUrl);
         }
+    }
+
+    /**
+     * Returns the URL to open after the browser is launched.
+     * Override in subclasses to target a different application (e.g. Redmine).
+     */
+    protected String getBaseUrl() {
+        return ConfigReader.get("base.url", "");
     }
 
     /**

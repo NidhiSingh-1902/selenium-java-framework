@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Redmine CRM Plugin Test Suite" verbose="1" parallel="methods" thread-count="2">
+
+    <listeners>
+        <listener class-name="com.framework.listeners.TestListener"/>
+    </listeners>
+
+    <!-- CRM Login Tests -->
+    <test name="CRM Login Tests">
+        <classes>
+            <class name="com.tests.redmine.crm.CrmLoginTest"/>
+        </classes>
+    </test>
+
+    <!-- CRM Dashboard Tests -->
+    <test name="CRM Dashboard Tests">
+        <classes>
+            <class name="com.tests.redmine.crm.CrmDashboardTest"/>
+        </classes>
+    </test>
+
+    <!-- CRM Contacts Tests -->
+    <test name="CRM Contacts Tests">
+        <classes>
+            <class name="com.tests.redmine.crm.CrmContactsTest"/>
+        </classes>
+    </test>
+
+    <!-- CRM Companies Tests -->
+    <test name="CRM Companies Tests">
+        <classes>
+            <class name="com.tests.redmine.crm.CrmCompaniesTest"/>
+        </classes>
+    </test>
+
+    <!-- CRM Deals Tests -->
+    <test name="CRM Deals Tests">
+        <classes>
+            <class name="com.tests.redmine.crm.CrmDealsTest"/>
+        </classes>
+    </test>
+
+    <!-- CRM Leads Tests -->
+    <test name="CRM Leads Tests">
+        <classes>
+            <class name="com.tests.redmine.crm.CrmLeadsTest"/>
+        </classes>
+    </test>
+
+</suite>

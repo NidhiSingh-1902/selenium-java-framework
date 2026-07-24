@@ -2,6 +2,7 @@ package com.pages.redmine.crm;
 
 import com.framework.pages.BasePage;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -30,19 +31,19 @@ public class CrmContactsPage extends BasePage {
     private WebElement emptyState;
 
     // — Form page elements —
-    @FindBy(name = "contact[first_name]")
+    @FindBy(name = "crm_contact[first_name]")
     private WebElement firstNameField;
 
-    @FindBy(name = "contact[last_name]")
+    @FindBy(name = "crm_contact[last_name]")
     private WebElement lastNameField;
 
-    @FindBy(name = "contact[email]")
+    @FindBy(name = "crm_contact[email]")
     private WebElement emailField;
 
-    @FindBy(name = "contact[phone]")
+    @FindBy(name = "crm_contact[phone]")
     private WebElement phoneField;
 
-    @FindBy(name = "contact[job_title]")
+    @FindBy(name = "crm_contact[job_title]")
     private WebElement jobTitleField;
 
     @FindBy(css = "input[type='submit']")
@@ -148,11 +149,19 @@ public class CrmContactsPage extends BasePage {
 
     public void createContactExpectingError(String firstName, String lastName, String email) {
         fillContactForm(firstName, lastName, email);
+        // Disable HTML5 required-attribute validation so empty fields reach the server
+        ((JavascriptExecutor) driver).executeScript(
+                "document.querySelector('form.crm-form').noValidate=true;");
         submitForm();
     }
 
     public boolean isErrorDisplayed() {
-        return isDisplayed(errorBox);
+        try {
+            wait.waitForVisible(errorBox);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public String getErrorText() {

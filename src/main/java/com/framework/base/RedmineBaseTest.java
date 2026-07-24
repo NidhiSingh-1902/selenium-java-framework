@@ -21,12 +21,18 @@ public class RedmineBaseTest extends BaseTest {
 
     @Override
     protected String getBaseUrl() {
-        return REDMINE_BASE_URL;
+        // Point directly at the login page — Redmine allows anonymous access at /,
+        // so navigating there would show a home page with no #username field.
+        return REDMINE_BASE_URL + "/login";
     }
 
     protected void loginAsAdmin() {
+        // Ensure we're on the login page before filling credentials
+        if (!getDriver().getCurrentUrl().contains("/login")) {
+            getDriver().get(REDMINE_BASE_URL + "/login");
+        }
         RedmineLoginPage loginPage = new RedmineLoginPage(getDriver());
-        loginPage.login("admin", "admin");
+        loginPage.login("admin", "admin123");
         log.info("Authenticated as admin");
     }
 }

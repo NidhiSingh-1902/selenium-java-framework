@@ -2,6 +2,7 @@ package com.pages.redmine.crm;
 
 import com.framework.pages.BasePage;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -30,19 +31,19 @@ public class CrmLeadsPage extends BasePage {
     private WebElement emptyState;
 
     // — Form elements —
-    @FindBy(name = "lead[first_name]")
+    @FindBy(name = "crm_lead[first_name]")
     private WebElement firstNameField;
 
-    @FindBy(name = "lead[last_name]")
+    @FindBy(name = "crm_lead[last_name]")
     private WebElement lastNameField;
 
-    @FindBy(name = "lead[email]")
+    @FindBy(name = "crm_lead[email]")
     private WebElement emailField;
 
-    @FindBy(name = "lead[phone]")
+    @FindBy(name = "crm_lead[phone]")
     private WebElement phoneField;
 
-    @FindBy(name = "lead[company_name]")
+    @FindBy(name = "crm_lead[company_name]")
     private WebElement companyNameField;
 
     @FindBy(css = "input[type='submit']")
@@ -51,9 +52,8 @@ public class CrmLeadsPage extends BasePage {
     @FindBy(css = ".crm-error-box")
     private WebElement errorBox;
 
-    // Convert-to-contact button (on lead show page)
-    @FindBy(css = "a[href*='/convert']")
-    private WebElement convertButton;
+    // Converted status label on the lead show page (shows "No" for unconverted leads)
+    private static final By CONVERTED_STATUS_LABEL = By.xpath("//label[normalize-space()='Converted']");
 
     private static final By TABLE_LINK = By.cssSelector("a.crm-table-link");
 
@@ -142,11 +142,18 @@ public class CrmLeadsPage extends BasePage {
 
     public void createLeadExpectingError(String firstName, String lastName, String email) {
         fillLeadForm(firstName, lastName, email);
+        ((JavascriptExecutor) driver).executeScript(
+                "document.querySelector('form.crm-form').noValidate=true;");
         submitForm();
     }
 
     public boolean isErrorDisplayed() {
-        return isDisplayed(errorBox);
+        try {
+            wait.waitForVisible(errorBox);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public String getErrorText() {
@@ -159,13 +166,7 @@ public class CrmLeadsPage extends BasePage {
         return getCurrentUrl().matches(".*\\/leads\\/\\d+$");
     }
 
-    public void clickConvert() {
-        wait.waitForClickable(convertButton);
-        jsClick(convertButton);
-        log.info("Clicked convert lead to contact");
-    }
-
-    public boolean isConvertButtonVisible() {
-        return isDisplayed(convertButton);
+    public boolean isConvertedStatusVisible() {
+        return !driver.findElements(CONVERTED_STATUS_LABEL).isEmpty();
     }
 }

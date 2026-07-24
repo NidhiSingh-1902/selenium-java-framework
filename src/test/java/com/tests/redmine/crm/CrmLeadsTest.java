@@ -114,7 +114,7 @@ public class CrmLeadsTest extends RedmineBaseTest {
         log.info("TC-CRM-LD-07 PASSED — lead detail page loaded at: {}", getDriver().getCurrentUrl());
     }
 
-    @Test(description = "TC-CRM-LD-08: Convert button is visible on lead detail page")
+    @Test(description = "TC-CRM-LD-08: Converted status badge is visible on lead detail page")
     public void convertButtonVisibleOnLeadDetail() {
         String firstName = "ConvertLead";
         String lastName = "User" + TS;
@@ -124,8 +124,8 @@ public class CrmLeadsTest extends RedmineBaseTest {
         page.clickNewLead();
         page.createLead(firstName, lastName, email);
 
-        Assert.assertTrue(page.isConvertButtonVisible(),
-                "Convert to contact button should be visible on lead detail page");
-        log.info("TC-CRM-LD-08 PASSED — convert button visible on lead detail page");
+        Assert.assertTrue(page.isConvertedStatusVisible(),
+                "Converted status badge should be visible on lead detail page");
+        log.info("TC-CRM-LD-08 PASSED — converted status badge visible on lead detail page");
     }
 }

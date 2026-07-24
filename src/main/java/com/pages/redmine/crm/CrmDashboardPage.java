@@ -11,7 +11,7 @@ public class CrmDashboardPage extends BasePage {
     @FindBy(css = ".crm-content-wrapper")
     private WebElement crmContentWrapper;
 
-    @FindBy(css = ".crm-navigation")
+    @FindBy(css = ".crm-sidebar-nav")
     private WebElement crmNavigation;
 
     @FindBy(css = ".crm-page-title")

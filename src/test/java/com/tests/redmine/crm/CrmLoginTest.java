@@ -17,7 +17,7 @@ public class CrmLoginTest extends RedmineBaseTest {
         RedmineLoginPage loginPage = new RedmineLoginPage(getDriver());
         Assert.assertTrue(loginPage.isPageLoaded(), "Login page should be loaded");
 
-        loginPage.login("admin", "admin");
+        loginPage.login("admin", "admin123");
 
         Assert.assertFalse(getDriver().getCurrentUrl().contains("/login"),
                 "Should have redirected away from login page after successful login");

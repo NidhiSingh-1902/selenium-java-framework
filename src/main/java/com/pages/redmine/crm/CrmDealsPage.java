@@ -2,6 +2,7 @@ package com.pages.redmine.crm;
 
 import com.framework.pages.BasePage;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -34,13 +35,13 @@ public class CrmDealsPage extends BasePage {
     private WebElement pipelineBoard;
 
     // — Form elements —
-    @FindBy(name = "deal[name]")
+    @FindBy(name = "crm_deal[name]")
     private WebElement nameField;
 
-    @FindBy(name = "deal[amount]")
+    @FindBy(name = "crm_deal[amount]")
     private WebElement amountField;
 
-    @FindBy(name = "deal[probability]")
+    @FindBy(name = "crm_deal[probability]")
     private WebElement probabilityField;
 
     @FindBy(css = "input[type='submit']")
@@ -145,11 +146,18 @@ public class CrmDealsPage extends BasePage {
 
     public void createDealExpectingError(String name, String amount) {
         fillDealForm(name, amount);
+        ((JavascriptExecutor) driver).executeScript(
+                "document.querySelector('form.crm-form').noValidate=true;");
         submitForm();
     }
 
     public boolean isErrorDisplayed() {
-        return isDisplayed(errorBox);
+        try {
+            wait.waitForVisible(errorBox);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public String getErrorText() {

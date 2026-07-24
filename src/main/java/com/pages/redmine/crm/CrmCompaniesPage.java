@@ -2,6 +2,7 @@ package com.pages.redmine.crm;
 
 import com.framework.pages.BasePage;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -30,19 +31,19 @@ public class CrmCompaniesPage extends BasePage {
     private WebElement emptyState;
 
     // — Form page elements —
-    @FindBy(name = "company[name]")
+    @FindBy(name = "crm_company[name]")
     private WebElement nameField;
 
-    @FindBy(name = "company[email]")
+    @FindBy(name = "crm_company[email]")
     private WebElement emailField;
 
-    @FindBy(name = "company[phone]")
+    @FindBy(name = "crm_company[phone]")
     private WebElement phoneField;
 
-    @FindBy(name = "company[website]")
+    @FindBy(name = "crm_company[website]")
     private WebElement websiteField;
 
-    @FindBy(name = "company[industry]")
+    @FindBy(name = "crm_company[industry]")
     private WebElement industryField;
 
     @FindBy(css = "input[type='submit']")
@@ -140,11 +141,18 @@ public class CrmCompaniesPage extends BasePage {
 
     public void createCompanyExpectingError(String name, String email) {
         fillCompanyForm(name, email);
+        ((JavascriptExecutor) driver).executeScript(
+                "document.querySelector('form.crm-form').noValidate=true;");
         submitForm();
     }
 
     public boolean isErrorDisplayed() {
-        return isDisplayed(errorBox);
+        try {
+            wait.waitForVisible(errorBox);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public String getErrorText() {

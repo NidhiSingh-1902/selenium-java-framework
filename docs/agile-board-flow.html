@@ -1,0 +1,582 @@
+<title>Agile Board Automation Flow</title>
+<style>
+:root {
+  --bg: #F5F7FC;
+  --surface: #FFFFFF;
+  --surface-alt: #EEF1F8;
+  --border: #CDD3E8;
+  --text: #1A2140;
+  --text-muted: #5C6480;
+  --arrow-col: #A0AACC;
+
+  --c-entry:  #6D28D9;
+  --c-suite:  #1D4ED8;
+  --c-test:   #047857;
+  --c-base:   #0369A1;
+  --c-page:   #0E7490;
+  --c-driver: #374151;
+  --c-app:    #92400E;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1117;
+    --surface: #161C29;
+    --surface-alt: #1E2637;
+    --border: #28334F;
+    --text: #DCE4F8;
+    --text-muted: #7A87AE;
+    --arrow-col: #3A4669;
+
+    --c-entry:  #A78BFA;
+    --c-suite:  #60A5FA;
+    --c-test:   #34D399;
+    --c-base:   #38BDF8;
+    --c-page:   #22D3EE;
+    --c-driver: #9CA3AF;
+    --c-app:    #FCD34D;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0D1117;
+  --surface: #161C29;
+  --surface-alt: #1E2637;
+  --border: #28334F;
+  --text: #DCE4F8;
+  --text-muted: #7A87AE;
+  --arrow-col: #3A4669;
+
+  --c-entry:  #A78BFA;
+  --c-suite:  #60A5FA;
+  --c-test:   #34D399;
+  --c-base:   #38BDF8;
+  --c-page:   #22D3EE;
+  --c-driver: #9CA3AF;
+  --c-app:    #FCD34D;
+}
+
+:root[data-theme="light"] {
+  --bg: #F5F7FC;
+  --surface: #FFFFFF;
+  --surface-alt: #EEF1F8;
+  --border: #CDD3E8;
+  --text: #1A2140;
+  --text-muted: #5C6480;
+  --arrow-col: #A0AACC;
+
+  --c-entry:  #6D28D9;
+  --c-suite:  #1D4ED8;
+  --c-test:   #047857;
+  --c-base:   #0369A1;
+  --c-page:   #0E7490;
+  --c-driver: #374151;
+  --c-app:    #92400E;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 36px 28px 60px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── Header ─────────────────────────────────────── */
+.page-header {
+  margin-bottom: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.page-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-wrap: balance;
+}
+
+.page-header .sub {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.badge {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+/* ── Flow diagram ────────────────────────────────── */
+.flow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.layer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ── Node box ─────────────────────────────────────── */
+.node {
+  flex: 1;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 11px 16px;
+}
+
+.node.wide { max-width: 100%; }
+
+.node-eye {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.node-name {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.node-info {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 7px;
+}
+
+.tag {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+/* Accent stripes & label colors */
+.n-entry  { border-left: 3px solid var(--c-entry);  }
+.n-suite  { border-left: 3px solid var(--c-suite);  }
+.n-test   { border-left: 3px solid var(--c-test);   }
+.n-base   { border-left: 3px solid var(--c-base);   }
+.n-page   { border-left: 3px solid var(--c-page);   }
+.n-driver { border-left: 3px solid var(--c-driver); }
+.n-app    { border-left: 3px solid var(--c-app);    }
+
+.n-entry  .node-eye { color: var(--c-entry);  }
+.n-suite  .node-eye { color: var(--c-suite);  }
+.n-test   .node-eye { color: var(--c-test);   }
+.n-base   .node-eye { color: var(--c-base);   }
+.n-page   .node-eye { color: var(--c-page);   }
+.n-driver .node-eye { color: var(--c-driver); }
+.n-app    .node-eye { color: var(--c-app);    }
+
+/* ── Arrow connector ─────────────────────────────── */
+.arr {
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.arr-inner {
+  position: relative;
+  height: 100%;
+  width: 1.5px;
+  background: var(--arrow-col);
+}
+
+.arr-inner::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid var(--arrow-col);
+}
+
+/* ── Legend ───────────────────────────────────────── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Details section ─────────────────────────────── */
+.details {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 560px) {
+  .details { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 18px 20px;
+}
+
+.card-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+/* Class tree */
+.ctree {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ct-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.ct-branch {
+  color: var(--border);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.ct-label { color: var(--text); }
+.ct-note  { font-size: 10px; color: var(--text-muted); margin-left: 2px; }
+
+.ct-indent-1 { padding-left: 14px; }
+.ct-indent-2 { padding-left: 28px; }
+
+.ct-spacer { height: 10px; }
+
+/* Implementation notes */
+.impl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.impl-item {}
+
+.impl-heading {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.impl-body {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 11px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.impl-warn { color: var(--c-app); }
+</style>
+
+<header class="page-header">
+  <h1>Agile Board Plugin — Selenium Automation Flow</h1>
+  <div class="sub">Redmine 7 · Docker localhost:3005 · Java 17 · TestNG 7.9.0 · Selenium 4.18.1</div>
+  <div class="badges">
+    <span class="badge">16 tests total</span>
+    <span class="badge">parallel=methods</span>
+    <span class="badge">thread-count=2</span>
+    <span class="badge">Page Object Model</span>
+    <span class="badge">ThreadLocal&lt;WebDriver&gt;</span>
+    <span class="badge">JavascriptExecutor dates</span>
+  </div>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot" style="background:var(--c-entry)"></span>Entry / Maven</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--c-suite)"></span>TestNG Suite XML</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--c-test)"></span>Test Classes</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--c-base)"></span>Shared Base Infrastructure</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--c-page)"></span>Page Objects</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--c-driver)"></span>WebDriver</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--c-app)"></span>Target Application</div>
+</div>
+
+<div class="flow">
+
+  <!-- Layer 1: Entry -->
+  <div class="layer">
+    <div class="node wide n-entry">
+      <div class="node-eye">Entry Point</div>
+      <div class="node-name">mvn test -Dsurefire.suiteXmlFiles=src/test/resources/testng-agile-board.xml</div>
+      <div class="node-info">Maven Surefire Plugin reads the TestNG XML and boots the test session</div>
+    </div>
+  </div>
+
+  <div class="arr"><div class="arr-inner"></div></div>
+
+  <!-- Layer 2: TestNG Suite -->
+  <div class="layer">
+    <div class="node wide n-suite">
+      <div class="node-eye">TestNG Suite</div>
+      <div class="node-name">Agile Board Plugin Test Suite</div>
+      <div class="node-info">parallel="methods" · thread-count="2" · 3 &lt;test&gt; blocks run concurrently up to thread cap</div>
+    </div>
+  </div>
+
+  <div class="arr"><div class="arr-inner"></div></div>
+
+  <!-- Layer 3: 3 test classes -->
+  <div class="layer">
+    <div class="node n-test">
+      <div class="node-eye">Test Class · 6 tests</div>
+      <div class="node-name">AgileBoardTest</div>
+      <div class="node-info">Board load, nav selected,<br>totals bar, filter panel,<br>backlog &amp; global board</div>
+      <div class="tags">
+        <span class="tag">TC-AB-01</span><span class="tag">TC-AB-02</span>
+        <span class="tag">TC-AB-03</span><span class="tag">TC-AB-04</span>
+        <span class="tag">TC-AB-05</span><span class="tag">TC-AB-06</span>
+      </div>
+    </div>
+    <div class="node n-test">
+      <div class="node-eye">Test Class · 6 tests</div>
+      <div class="node-name">SprintCraftTest</div>
+      <div class="node-info">List loads, form loads,<br>create, edit, delete,<br>validation (no name)</div>
+      <div class="tags">
+        <span class="tag">TC-SC-01</span><span class="tag">TC-SC-02</span>
+        <span class="tag">TC-SC-03</span><span class="tag">TC-SC-04</span>
+        <span class="tag">TC-SC-05</span><span class="tag">TC-SC-06</span>
+      </div>
+    </div>
+    <div class="node n-test">
+      <div class="node-eye">Test Class · 4 tests</div>
+      <div class="node-name">BoardConfigTest</div>
+      <div class="node-info">New form loads,<br>create Kanban, create Scrum,<br>cancel → returns to board</div>
+      <div class="tags">
+        <span class="tag">TC-BC-01</span><span class="tag">TC-BC-02</span>
+        <span class="tag">TC-BC-03</span><span class="tag">TC-BC-04</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arr"><div class="arr-inner"></div></div>
+
+  <!-- Layer 4: Redmine7BaseTest -->
+  <div class="layer">
+    <div class="node wide n-base">
+      <div class="node-eye">Plugin-Specific Base · extends BaseTest</div>
+      <div class="node-name">Redmine7BaseTest</div>
+      <div class="node-info">REDMINE7_BASE_URL = "http://localhost:3005" · TEST_PROJECT = "website-redesign"<br>loginAsAdmin() → navigates to /login, fills credentials, submits · getBaseUrl() override</div>
+    </div>
+  </div>
+
+  <div class="arr"><div class="arr-inner"></div></div>
+
+  <!-- Layer 5: BaseTest -->
+  <div class="layer">
+    <div class="node wide n-base">
+      <div class="node-eye">Framework Core · shared across all plugins</div>
+      <div class="node-name">BaseTest</div>
+      <div class="node-info">ThreadLocal&lt;WebDriver&gt; — one isolated driver per parallel thread<br>@BeforeMethod: setupDriver() · @AfterMethod: driver.quit() + ThreadLocal.remove()</div>
+    </div>
+  </div>
+
+  <div class="arr"><div class="arr-inner"></div></div>
+
+  <!-- Layer 6: 3 page objects -->
+  <div class="layer">
+    <div class="node n-page">
+      <div class="node-eye">Page Object</div>
+      <div class="node-name">AgileBoardPage</div>
+      <div class="node-info">
+        isBoardVisible()<br>
+        isBoardNavSelected()<br>
+        isTotalsBarVisible()<br>
+        clickFilterToggle()<br>
+        navigateToBacklog()<br>
+        navigateToGlobalBoard()
+      </div>
+    </div>
+    <div class="node n-page">
+      <div class="node-eye">Page Object</div>
+      <div class="node-name">SprintCraftPage</div>
+      <div class="node-info">
+        isSprintListVisible()<br>
+        isSprintInList(name)<br>
+        fillForm(name, startDate)<br>
+        → JS executeScript for date<br>
+        clickEditForSprint(name)<br>
+        clickDeleteForSprint(name)<br>
+        confirmDelete()
+      </div>
+    </div>
+    <div class="node n-page">
+      <div class="node-eye">Page Object</div>
+      <div class="node-name">BoardConfigPage</div>
+      <div class="node-info">
+        isNameFieldVisible()<br>
+        createBoardConfig(<br>
+        &nbsp;&nbsp;name, boardType)<br>
+        → Select by value<br>
+        clickCancel()
+      </div>
+    </div>
+  </div>
+
+  <div class="arr"><div class="arr-inner"></div></div>
+
+  <!-- Layer 7: BasePage -->
+  <div class="layer">
+    <div class="node wide n-base">
+      <div class="node-eye">Page Base · extended by all page objects</div>
+      <div class="node-name">BasePage</div>
+      <div class="node-info">PageFactory.initElements(driver, this) · @FindBy lazy element init · click() · type() · isDisplayed() · jsClick() · waitForVisible()</div>
+    </div>
+  </div>
+
+  <div class="arr"><div class="arr-inner"></div></div>
+
+  <!-- Layer 8: ChromeDriver -->
+  <div class="layer">
+    <div class="node wide n-driver">
+      <div class="node-eye">WebDriver Layer</div>
+      <div class="node-name">ChromeDriver → Chrome Browser</div>
+      <div class="node-info">WebDriverManager auto-manages chromedriver binary · JavascriptExecutor available for HTML5 date fields &amp; readonly bypasses</div>
+    </div>
+  </div>
+
+  <div class="arr"><div class="arr-inner"></div></div>
+
+  <!-- Layer 9: Redmine 7 -->
+  <div class="layer">
+    <div class="node wide n-app">
+      <div class="node-eye">Target Application</div>
+      <div class="node-name">Redmine 7 · agile_board plugin · Docker container redmine7-local</div>
+      <div class="node-info">http://localhost:3005 · credentials: admin / admin123 · project: website-redesign (identifier)</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Detail cards -->
+<div class="details">
+
+  <div class="card">
+    <div class="card-title">Class Hierarchy</div>
+    <div class="ctree">
+
+      <div class="ct-row"><span class="ct-label" style="color:var(--c-base)">BaseTest</span><span class="ct-note">ThreadLocal&lt;WebDriver&gt;</span></div>
+      <div class="ct-row ct-indent-1"><span class="ct-branch">└──</span><span class="ct-label" style="color:var(--c-base)">Redmine7BaseTest</span><span class="ct-note">:3005</span></div>
+      <div class="ct-row ct-indent-2"><span class="ct-branch">├──</span><span class="ct-label" style="color:var(--c-test)">AgileBoardTest</span></div>
+      <div class="ct-row ct-indent-2"><span class="ct-branch">├──</span><span class="ct-label" style="color:var(--c-test)">SprintCraftTest</span></div>
+      <div class="ct-row ct-indent-2"><span class="ct-branch">└──</span><span class="ct-label" style="color:var(--c-test)">BoardConfigTest</span></div>
+
+      <div class="ct-spacer"></div>
+
+      <div class="ct-row"><span class="ct-label" style="color:var(--c-base)">BasePage</span><span class="ct-note">PageFactory + waits</span></div>
+      <div class="ct-row ct-indent-1"><span class="ct-branch">├──</span><span class="ct-label" style="color:var(--c-page)">Redmine7LoginPage</span></div>
+      <div class="ct-row ct-indent-1"><span class="ct-branch">├──</span><span class="ct-label" style="color:var(--c-page)">AgileBoardPage</span></div>
+      <div class="ct-row ct-indent-1"><span class="ct-branch">├──</span><span class="ct-label" style="color:var(--c-page)">SprintCraftPage</span></div>
+      <div class="ct-row ct-indent-1"><span class="ct-branch">└──</span><span class="ct-label" style="color:var(--c-page)">BoardConfigPage</span></div>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Key Implementation Notes</div>
+    <div class="impl-list">
+
+      <div class="impl-item">
+        <div class="impl-heading">HTML5 Date Input</div>
+        <div class="impl-body">type="date" fields reject Selenium clear() — use JavascriptExecutor: set .value + dispatch change event so updateEndDate() auto-calculates end date</div>
+      </div>
+
+      <div class="impl-item">
+        <div class="impl-heading">Readonly Fields</div>
+        <div class="impl-body">sprint_end_date has readonly=true (auto-calc from start + duration). fillForm() takes only (name, startDate) — no endDate param.</div>
+      </div>
+
+      <div class="impl-item">
+        <div class="impl-heading">Parallel Test Isolation</div>
+        <div class="impl-body">Each method gets its own WebDriver via ThreadLocal. Sprint names carry System.currentTimeMillis() % 100_000 suffix to avoid data collisions.</div>
+      </div>
+
+      <div class="impl-item">
+        <div class="impl-heading">Login IDs (Redmine 7)</div>
+        <div class="impl-body">id="username" · id="password" · id="login-submit" — standard Redmine, not the Lotus CRM theme (rf_username / rf_password)</div>
+      </div>
+
+      <div class="impl-item">
+        <div class="impl-heading impl-warn">Known Plugin Bug</div>
+        <div class="impl-body impl-warn">board_configs index → HTTP 500 (ArgumentError in authorize). BoardConfigTest only covers /new, create, cancel — list page skipped.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

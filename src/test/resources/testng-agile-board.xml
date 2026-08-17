@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="Agile Board Plugin Test Suite"
+       parallel="methods"
+       thread-count="2">
+
+    <listeners>
+        <listener class-name="com.framework.listeners.TestListener"/>
+    </listeners>
+
+    <test name="Agile Board Tests">
+        <classes>
+            <class name="com.tests.redmine.agile_board.AgileBoardTest"/>
+        </classes>
+    </test>
+
+    <test name="Sprint Craft Tests">
+        <classes>
+            <class name="com.tests.redmine.agile_board.SprintCraftTest"/>
+        </classes>
+    </test>
+
+    <test name="Board Config Tests">
+        <classes>
+            <class name="com.tests.redmine.agile_board.BoardConfigTest"/>
+        </classes>
+    </test>
+
+</suite>
